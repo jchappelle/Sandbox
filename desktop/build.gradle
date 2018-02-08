@@ -1,0 +1,46 @@
+apply plugin: "java"
+
+sourceCompatibility = 1.8
+sourceSets.main.java.srcDirs = [ "src/" ]
+
+project.ext.mainClassName = "com.joshchappelle.sandbox.desktop.DesktopLauncher"
+project.ext.assetsDir = new File("../core/assets");
+
+/*
+    ADD NEW GAMES HERE TO ADD RUN CONFIGURATIONS
+ */
+def games = ["bucketdrop","meshdemo"]
+games.each {
+    def thisGame = it
+    task ("run_${it}", dependsOn: classes, type: JavaExec) {
+        main = project.mainClassName
+        classpath = sourceSets.main.runtimeClasspath
+        standardInput = System.in
+        workingDir = project.assetsDir
+        ignoreExitValue = true
+        args thisGame
+    }
+
+    task ("debug_${it}", dependsOn: classes, type: JavaExec) {
+        main = project.mainClassName
+        classpath = sourceSets.main.runtimeClasspath
+        standardInput = System.in
+        workingDir = project.assetsDir
+        ignoreExitValue = true
+        args thisGame
+        debug = true
+    }
+}
+
+task dist(type: Jar) {
+    from files(sourceSets.main.output.classesDir)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.compile.collect {zipTree(it)}}
+    from files(project.assetsDir);
+ 
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+dist.dependsOn classes
